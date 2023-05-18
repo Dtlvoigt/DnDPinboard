@@ -4,7 +4,7 @@ using System.IO;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace EasyPinboard.Services
+namespace DnDPinboard.Services
 {
     //this service will only be used manually to update local files from the API
     public class JsonBuilderService

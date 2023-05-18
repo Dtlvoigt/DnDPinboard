@@ -1,4 +1,4 @@
-﻿namespace EasyPinboard.Models
+﻿namespace DnDPinboard.Models
 {
     public class ResultsAPI
     {

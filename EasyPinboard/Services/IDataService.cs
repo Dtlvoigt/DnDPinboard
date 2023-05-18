@@ -1,6 +1,6 @@
 ﻿using rm.Trie;
 
-namespace EasyPinboard.Services
+namespace DnDPinboard.Services
 {
     public interface IDataService
     {

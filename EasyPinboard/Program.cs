@@ -1,4 +1,4 @@
-using EasyPinboard.Services;
+using DnDPinboard.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

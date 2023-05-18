@@ -1,9 +1,9 @@
-﻿using EasyPinboard.Models;
-using EasyPinboard.Services;
+﻿using DnDPinboard.Models;
+using DnDPinboard.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
-namespace EasyPinboard.Controllers
+namespace DnDPinboard.Controllers
 {
     public class PinboardController : Controller
     {
