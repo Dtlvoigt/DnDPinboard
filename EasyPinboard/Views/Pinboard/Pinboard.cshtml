@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <div class="input-group mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Enter a class, spell, monster, or more!" aria-label="searchBar" aria-describedby="button-addon2">
+        <button class="btn btn-outline-secondary" type="button" id="button-addon2">Search</button>
+    </div>
+    <ul id="suggestionsList"></ul>
+</div>
+
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(function () {
+        $('#searchInput').on('input', function () {
+            var prefix = $(this).val();
+            if (prefix.length >= 3) { // Adjust the minimum prefix length as needed
+                $.ajax({
+                    url: '@Url.Action("AutoComplete", "Pinboard")',
+                    type: 'GET',
+                    data: { prefix: prefix },
+                    success: function (data) {
+                        var suggestionsList = $('#suggestionsList');
+                        suggestionsList.empty();
+
+                        // Display the suggestions in a list
+                        data.forEach(function (suggestion) {
+                            var listItem = $('<li>').text(suggestion);
+                            suggestionsList.append(listItem);
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
