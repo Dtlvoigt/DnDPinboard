@@ -25,6 +25,6 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Pinboard}/{action=Index}/{id?}");
+    pattern: "{controller=Pinboard}/{action=Pinboard}/{id?}");
 
 app.Run();

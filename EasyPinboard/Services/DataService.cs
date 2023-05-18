@@ -1,5 +1,4 @@
 ﻿using DnDPinboard.Models;
-using rm.Trie;
 using System;
 using System.Collections.Generic;
 using System.Net.Http.Headers;
@@ -9,8 +8,8 @@ namespace DnDPinboard.Services
 {
     public class DataService : IDataService
     {
-        public static Dictionary<string, List<string>>? _searchCategories;
-        public static Trie? _searchTerms;
+        private static Dictionary<string, List<string>>? _searchCategories;
+        private static Trie _searchTerms;
 
         /* The purpose of DataService is to create an abstraction between models and the actual database.
            Other classes should not have direct access to the database and must go through DataService. */
@@ -25,14 +24,15 @@ namespace DnDPinboard.Services
             {
                 _searchCategories = new Dictionary<string, List<string>>();
                 _searchTerms = new Trie();
-                await LoadFromJson();
+                await LoadJsonItems();
             }
         }
 
-        public async Task LoadFromJson()
+        public async Task LoadJsonItems()
         {
             string path = "JSON Data";
             string[] fileNames = Directory.GetFiles(path);
+            int count = 0;
 
             if (fileNames.Length > 0)
             {
@@ -48,7 +48,8 @@ namespace DnDPinboard.Services
                         foreach (ResultsAPI.Result result in data.results)
                         {
                             itemList.Add(result.name.ToLower());
-                            _searchTerms.AddWord(result.name.ToLower());
+                            _searchTerms.Insert(result.name.ToLower());
+                            count++;
                         }
                     }
 
@@ -60,69 +61,11 @@ namespace DnDPinboard.Services
             }
         }
 
-        //create a list of all major categories
-        public async Task<List<string>> CategoryList()/////////////////////////////////////
+        //get auto correct suggestions for a certain prefix from the Trie
+        public async Task<List<string>> GetAutoCorrectSuggestions(string prefix)
         {
-            List<string> categoriesList = new List<string>();
-            string categoriesJson = await LoadJson("");
-
-            if (!string.IsNullOrEmpty(categoriesJson))
-            {
-                JsonDocument jsonDocCategories = JsonDocument.Parse(categoriesJson);
-                JsonElement rootCategories = jsonDocCategories.RootElement;
-
-                foreach (JsonProperty category in rootCategories.EnumerateObject())
-                {
-                    if (!String.IsNullOrEmpty(category.Name))
-                    {
-                        categoriesList.Add(category.Name);
-                    }
-                }
-            }
-
-            return categoriesList;
-        }
-
-        //load item categories into data structure with sub terms
-        public async Task<Dictionary<string, List<string>>> FindCategories()
-        {
-            var searchCategories = new Dictionary<string, List<string>>();
-            _searchTerms = new Trie();
-            List<string> categoriesList = await CategoryList();
-
-            if(categoriesList != null)
-            {
-                foreach (string category in categoriesList)
-                {
-                    List<string> itemList = new List<string>();
-                    string itemsJson = await LoadJson(category);
-                    if (!String.IsNullOrEmpty(itemsJson))
-                    {
-                        ResultsAPI data = JsonSerializer.Deserialize<ResultsAPI>(itemsJson);
-                        foreach(ResultsAPI.Result result in data.results)
-                        {
-                            itemList.Add(result.name);
-                            _searchTerms.AddWord(result.name);
-                        }
-                    }
-
-                    if(itemList != null)
-                    {
-                        searchCategories.Add(category, itemList);
-                    }
-                }
-            }
-
-            return searchCategories;
-        }
-
-        //load item keywords into Trie data structure for fast searching later
-        public async Task<Trie> FindTerms()
-        {
-            Trie searchTerms = new Trie();
-
-
-            return searchTerms;
+            var suggestions = _searchTerms.GetAllWordsWithPrefix(prefix).ToList();
+            return suggestions;
         }
 
         public async Task<string> LoadJson(string url)
