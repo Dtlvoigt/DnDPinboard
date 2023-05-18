@@ -12,10 +12,9 @@ namespace DnDPinboard.Controllers
 
         public PinboardController(IDataService data, ILogger<PinboardController> logger)
         {
-            Console.WriteLine("controller!!");
+            //var jsonBuilderService = new JsonBuilderService();
             _data = data;
             _logger = logger;
-            //var jsonBuilderService = new JsonBuilderService();
         }
 
         public IActionResult Index()
