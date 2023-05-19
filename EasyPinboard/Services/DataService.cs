@@ -1,4 +1,5 @@
 ﻿using DnDPinboard.Models;
+using rm.Trie;
 using System;
 using System.Collections.Generic;
 using System.Net.Http.Headers;
@@ -9,6 +10,7 @@ namespace DnDPinboard.Services
     public class DataService : IDataService
     {
         private static Dictionary<string, List<string>>? _searchCategories;
+        private static Dictionary<string, List<string>>? _itemCategories;
         private static Trie _searchTerms;
 
         /* The purpose of DataService is to create an abstraction between models and the actual database.
@@ -20,8 +22,9 @@ namespace DnDPinboard.Services
 
         public async Task InitializeDataStructures()
         {
-            if (_searchCategories == null || _searchTerms == null)
+            if (_searchCategories == null || _searchTerms == null || _itemCategories == null)
             {
+                _itemCategories = new Dictionary<string, List<string>>();
                 _searchCategories = new Dictionary<string, List<string>>();
                 _searchTerms = new Trie();
                 await LoadJsonItems();
@@ -47,8 +50,20 @@ namespace DnDPinboard.Services
                         ResultsAPI data = JsonSerializer.Deserialize<ResultsAPI>(jsonData);
                         foreach (ResultsAPI.Result result in data.results)
                         {
-                            itemList.Add(result.name.ToLower());
-                            _searchTerms.Insert(result.name.ToLower());
+                            string name = result.name.ToLower();
+                            itemList.Add(name);
+                            if(_itemCategories.ContainsKey(name))
+                            {
+                                _itemCategories[name].Add(category);
+                            }
+                            else
+                            {
+                                var newList = new List<string>();
+                                newList.Add(category);
+                                _itemCategories.Add(name, newList);
+                            }
+
+                            _searchTerms.AddWord(name);
                             count++;
                         }
                     }
@@ -64,11 +79,29 @@ namespace DnDPinboard.Services
         //get auto correct suggestions for a certain prefix from the Trie
         public async Task<List<string>> GetAutoCorrectSuggestions(string prefix)
         {
-            var suggestions = _searchTerms.GetAllWordsWithPrefix(prefix).ToList();
-            return suggestions;
+            var suggestions = _searchTerms.GetWords(prefix).ToList();
+            var itemsWithCategories = await AddCategories(suggestions);
+            return itemsWithCategories;
         }
 
-        public async Task<string> LoadJson(string url)
+        public async Task<List<string>> AddCategories(List<string> items)
+        {
+            var itemsWithCategories = new List<string>();
+            foreach(string item in items)
+            {
+                foreach(var category in _itemCategories[item])
+                {
+                    string updatedItem = item + " (" + category + ")";
+                    itemsWithCategories.Add(updatedItem);
+                }
+                //string updatedItem = item + " (" + _itemCategories[item] + ")";
+                //itemsWithCategories.Add(updatedItem);
+            }
+
+            return itemsWithCategories;
+        }
+
+        public async Task<string> CallAPI(string url)
         {
             using HttpClient client = new();
             client.DefaultRequestHeaders.Accept.Clear();

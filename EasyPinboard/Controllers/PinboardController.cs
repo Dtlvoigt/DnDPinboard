@@ -39,7 +39,8 @@ namespace DnDPinboard.Controllers
         [HttpGet]
         public async Task<IActionResult> AutoComplete(string prefix)
         {
-            List<string> suggestions = await _data.GetAutoCorrectSuggestions(prefix);
+            List<string> suggestions = await _data.GetAutoCorrectSuggestions(prefix.ToLower());
+            _data.AddCategories(suggestions);
             return Json(suggestions);
         }
 

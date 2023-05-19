@@ -6,6 +6,7 @@ namespace DnDPinboard.Services
         Task InitializeDataStructures();
         Task LoadJsonItems();
         Task<List<string>> GetAutoCorrectSuggestions(string prefix);
-        Task<string> LoadJson(string url);
+        Task<List<string>> AddCategories(List<string> items);
+        Task<string> CallAPI(string url);
     }
 }
