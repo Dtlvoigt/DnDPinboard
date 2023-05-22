@@ -15,7 +15,7 @@ namespace DnDPinboard.Services
 
         /* The purpose of DataService is to create an abstraction between models and the actual database.
            Other classes should not have direct access to the database and must go through DataService. */
-        public DataService() 
+        public DataService()
         {
             InitializeDataStructures().GetAwaiter().GetResult();
         }
@@ -31,47 +31,53 @@ namespace DnDPinboard.Services
             }
         }
 
+        //fills data structures with items from local json files
         public async Task LoadJsonItems()
         {
             string path = "JSON Data";
             string[] fileNames = Directory.GetFiles(path);
             int count = 0;
 
-            if (fileNames.Length > 0)
+            if (fileNames.Length == 0)
             {
-                foreach (string file in fileNames)
+                return;
+            }
+
+            //iterate through each json file in the directory, adding terms + categories to dictionary
+            foreach (string file in fileNames)
+            {
+                string category = Path.GetFileNameWithoutExtension(file);
+                List<string> itemList = new List<string>();
+                string jsonData = File.ReadAllText(file);
+
+                if (!string.IsNullOrEmpty(jsonData))
                 {
-                    string category = Path.GetFileNameWithoutExtension(file);
-                    List<string> itemList = new List<string>();
-                    string jsonData = File.ReadAllText(file);
-
-                    if (!string.IsNullOrEmpty(jsonData))
+                    ResultsAPI data = JsonSerializer.Deserialize<ResultsAPI>(jsonData);
+                    foreach (ResultsAPI.Result result in data.results)
                     {
-                        ResultsAPI data = JsonSerializer.Deserialize<ResultsAPI>(jsonData);
-                        foreach (ResultsAPI.Result result in data.results)
+                        string name = result.name.ToLower();
+                        itemList.Add(name);
+
+                        //if dictionary already has this key, add the category onto the corresponding list, else create a new key
+                        if (_itemCategories.ContainsKey(name))
                         {
-                            string name = result.name.ToLower();
-                            itemList.Add(name);
-                            if(_itemCategories.ContainsKey(name))
-                            {
-                                _itemCategories[name].Add(category);
-                            }
-                            else
-                            {
-                                var newList = new List<string>();
-                                newList.Add(category);
-                                _itemCategories.Add(name, newList);
-                            }
-
-                            _searchTerms.AddWord(name);
-                            count++;
+                            _itemCategories[name].Add(category);
                         }
-                    }
+                        else
+                        {
+                            var newList = new List<string>();
+                            newList.Add(category);
+                            _itemCategories.Add(name, newList);
+                        }
 
-                    if (itemList != null)
-                    {
-                        _searchCategories.Add(category, itemList);
+                        _searchTerms.AddWord(name);
+                        count++;
                     }
+                }
+
+                if (itemList != null)
+                {
+                    _searchCategories.Add(category, itemList);
                 }
             }
         }
@@ -87,9 +93,9 @@ namespace DnDPinboard.Services
         public async Task<List<string>> AddCategories(List<string> items)
         {
             var itemsWithCategories = new List<string>();
-            foreach(string item in items)
+            foreach (string item in items)
             {
-                foreach(var category in _itemCategories[item])
+                foreach (var category in _itemCategories[item])
                 {
                     string updatedItem = item + " (" + category + ")";
                     itemsWithCategories.Add(updatedItem);
